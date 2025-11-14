@@ -4,66 +4,74 @@ from flask import Flask, jsonify
 
 app = Flask(__name__)
 
-API_KEY = "981ad154432a25b08b52952e4462dbfde444d30f5972547dd15e7eef8e34fb3d" # 공공데이터 일반 인증키
+API_KEY = "981ad154432a25b08b52952e4462dbfde444d30f5972547dd15e7eef8e34fb3d" # 신청해서 받은 일반 인증키
 
 # DB 경로 (SQLite 로 만든거)
 DB_PATH = "air_quality.db"   
 
-@app.route('/save')
-def save_data():
-    # 공공데이터 API 요청 주소 구성
-    url = (
-        "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/"
-        "getCtprvnRltmMesureDnsty"
-        f"?serviceKey={API_KEY}"
-        "&returnType=json"
-        "&sidoName=인천"
-        "&numOfRows=100"
-    )
+# 전국 시·도 목록
+ALL_SIDO = [
+    "서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산", "세종",
+    "강원", "충남", "충북", "전남", "전북", "경남", "경북", "제주"
+]
 
-    # API 요청 및 JSON 파싱
-    response = requests.get(url)
-    data = response.json()
+@app.route('/save_all')
+def save_all():
+    total_saved = 0  # 총 저장 개수 표시를 위한 변수임
 
-    # 필요한 실제 측정값 리스트
-    items = data['response']['body']['items']
+    for sido in ALL_SIDO:
+        # 시·도별 API 주소 구성
+        url = (
+            "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/"
+            "getCtprvnRltmMesureDnsty"
+            f"?serviceKey={API_KEY}"
+            "&returnType=json"
+            f"&sidoName={sido}"
+            "&numOfRows=100"
+        )
 
-    # SQLite DB 연결
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
+        # 요청 및 JSON 파싱
+        response = requests.get(url)
+        data = response.json()
+        items = data['response']['body']['items']
 
-    # 미세먼지 수치가 없는 경우가 있어서 정리용 함수 작성
-    def clean(value):
-        # 값이 비어있거나 "-"처럼 수치가 아닌 경우 None 처리
-        if value is None or value == "-" or value == "":
-            return None
-        try:
-            return int(value)   # 정상 숫자면 정수로 변환
-        except:
-            return None         # 변환 실패도 None
+        # DB 연결
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
 
-    # 각 측정 데이터를 DB에 저장
-    for item in items:
-        station = item.get('stationName')
-        sido = item.get('sidoName')
-        time = item.get('dataTime')
+        # 값 정리 함수
+        def clean(v):
+            if v is None or v == "-" or v == "":
+                return None
+            try:
+                return int(v)
+            except:
+                return None
 
-        # 측정값 중 일부는 빠져 있는 경우가 있어 .get 사용
-        pm10 = clean(item.get('pm10Value'))
-        pm25 = clean(item.get('pm25Value'))
+        # 데이터 저장
+        for item in items:
+            station = item.get('stationName')
+            sido_name = item.get('sidoName')
+            time = item.get('dataTime')
+            pm10 = clean(item.get('pm10Value'))
+            pm25 = clean(item.get('pm25Value'))
 
-        # SQLite 테이블에 삽입
-        cur.execute("""
-            INSERT INTO air_quality (station, sido, dataTime, pm10, pm25)
-            VALUES (?, ?, ?, ?, ?)
-        """, (station, sido, time, pm10, pm25))
+            cur.execute("""
+                INSERT INTO air_quality (station, sido, dataTime, pm10, pm25)
+                VALUES (?, ?, ?, ?, ?)
+            """, (station, sido_name, time, pm10, pm25))
 
-    # 변경사항 저장 후 종료
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
 
-    # 저장된 개수 확인용 응답
-    return jsonify({"saved": len(items)})
+        # 몇 개 저장됐는지 합산 홈페이지에서 보여주기
+        total_saved += len(items)
+
+    return jsonify({
+        "saved_total": total_saved,
+        "regions": len(ALL_SIDO)
+    })
+
 
 if __name__ == '__main__':
     app.run(debug=True)
