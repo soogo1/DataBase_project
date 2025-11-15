@@ -25,7 +25,7 @@ def clean_value(v):
     if v is None or v == "-" or v == "":
         return None
     try:
-        return int(v)
+        return float(v)       # 다양한 오염물질이 실수(소수점)일 수 있음
     except:
         return None
 
@@ -72,18 +72,27 @@ def save_sido_data(sido):
 
         pm25 = clean_value(pm25_raw)
 
+        # ★ 추가 오염물질 저장 (환경부 API에 포함됨)
+        o3 = clean_value(item.get("o3Value"))
+        no2 = clean_value(item.get("no2Value"))
+        so2 = clean_value(item.get("so2Value"))
+        co = clean_value(item.get("coValue"))
+        khai = clean_value(item.get("khaiValue"))  # 통합대기지수
+
         # DB 삽입
         cur.execute("""
-            INSERT INTO air_quality (station, sido, dataTime, pm10, pm25)
-            VALUES (?, ?, ?, ?, ?)
-        """, (station, sido_name, time, pm10, pm25))
+            INSERT INTO air_quality 
+            (station, sido, dataTime, pm10, pm25, o3, no2, so2, co, khai)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (station, sido_name, time, pm10, pm25, o3, no2, so2, co, khai))
 
     conn.commit()
     conn.close()
 
     return len(items)
 
-@app.route('/save_all') # 수집한 데이터를 DB에 저장하라 (과제 조건있었음)
+
+@app.route('/save_all')  # 수집한 데이터를 DB에 저장하라 (과제 조건있었음)
 def save_all():
     """전국 모든 시·도 데이터를 한 번에 가져와 저장하는 API."""
     total_saved = 0
@@ -115,10 +124,10 @@ def auto_update():
 
 
 
- # 저장된 내용을 조회하는 기능을 구현하라 (과제 조건있었음)
- # 전체 데이터 조회하는게 양이 너무 많아서 너무 느림, 그래서 쪼개버림
- # url 칠때 /list?page=N 해가지고 페이지를 나눴음
-@app.route("/list")  
+# 저장된 내용을 조회하는 기능을 구현하라 (과제 조건있었음)
+# 전체 데이터 조회하는게 양이 너무 많아서 너무 느림, 그래서 쪼개버림
+# url 칠때 /list?page=N 해가지고 페이지를 나눴음
+@app.route("/list")
 def list_data():
     # 기본은 1페이지
     page = int(request.args.get("page", 1))
@@ -130,7 +139,7 @@ def list_data():
 
     # 한 페이지에 필요한 것보다 1개 더 읽어서, 다음 페이지가 있는지 판단
     cur.execute("""
-        SELECT station, sido, dataTime, pm10, pm25
+        SELECT station, sido, dataTime, pm10, pm25, o3, no2, so2, co, khai
         FROM air_quality
         ORDER BY dataTime DESC
         LIMIT ? OFFSET ?
@@ -141,7 +150,7 @@ def list_data():
 
     # 다음 페이지가 있는지 여부
     has_next = len(rows) > per_page
-    # 실제로 화면에 보여줄 것은 per_page 개수까지만
+    # 실제 화면에 보여줄 것은 per_page 개수까지만
     rows = rows[:per_page]
 
     return render_template(

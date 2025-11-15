@@ -21,6 +21,7 @@
             border: 1px solid #ccc;
             padding: 8px;
             text-align: center;
+            font-size: 13px;
         }
         th {
             background: #f5f5f5;
@@ -43,7 +44,7 @@
 </head>
 <body>
 
-    <h1>미세먼지 관측 데이터 조회</h1>
+    <h1>미세먼지 환경 정보 조회</h1>
 
     <table>
         <tr>
@@ -52,6 +53,11 @@
             <th>시간</th>
             <th>PM10</th>
             <th>PM25</th>
+            <th>O3</th>
+            <th>NO2</th>
+            <th>SO2</th>
+            <th>CO</th>
+            <th>KHAI</th>
         </tr>
 
         {% for row in rows %}
@@ -61,11 +67,16 @@
             <td>{{ row[2] }}</td>
             <td>{{ row[3] }}</td>
             <td>{{ row[4] }}</td>
+            <td>{{ row[5] }}</td>
+            <td>{{ row[6] }}</td>
+            <td>{{ row[7] }}</td>
+            <td>{{ row[8] }}</td>
+            <td>{{ row[9] }}</td>
         </tr>
         {% endfor %}
     </table>
 
-        <div class="pagination">
+    <div class="pagination">
         {% if page > 1 %}
             <a href="/list?page={{ page-1 }}">◀ 이전</a>
         {% endif %}
