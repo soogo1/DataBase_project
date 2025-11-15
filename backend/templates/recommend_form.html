@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>운동 추천 검색</title>
+</head>
+<body>
+
+    <h1>운동 추천 검색</h1>
+
+    <form action="/recommend" method="GET">
+
+        <label>연령대:</label>
+        <select name="age">
+            <option>10대</option>
+            <option>20대</option>
+            <option>30대</option>
+            <option>40대</option>
+            <option>50대</option>
+            <option>60대</option>
+            <option>70대 이상</option>
+        </select>
+        <br><br>
+
+        <label>BMI 단계:</label>
+        <select name="bmi">
+            <option>저체중</option>
+            <option>정상</option>
+            <option>비만전단계비만</option>
+            <option>1단계비만</option>
+            <option>2단계비만</option>
+            <option>3단계비만</option>
+        </select>
+        <br><br>
+
+        <label>성별:</label>
+        <select name="gender">
+            <option>F</option>
+            <option>M</option>
+        </select>
+        <br><br>
+
+        <label>체력등급:</label>
+        <select name="fitness">
+            <option>1등급</option>
+            <option>2등급</option>
+            <option>3등급</option>
+            <option>참가증</option>
+        </select>
+        <br><br>
+
+        <button type="submit">운동 추천 받기</button>
+    </form>
+
+</body>
+</html>

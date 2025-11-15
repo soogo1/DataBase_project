@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>운동 추천 결과</title>
+</head>
+<body>
+
+    <h1>운동 추천 결과</h1>
+
+    <p>{{ age }} / {{ bmi }} / {{ gender }} / {{ fitness }}</p>
+
+    <table border="1" cellpadding="6">
+        <tr>
+            <th>카테고리</th>
+            <th>난이도</th>
+            <th>추천운동명</th>
+        </tr>
+
+        {% for c, d, name in rows %}
+        <tr>
+            <td>{{ c }}</td>
+            <td>{{ d }}</td>
+            <td>{{ name }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
