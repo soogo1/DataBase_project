@@ -212,7 +212,31 @@ def select_region():
     return render_template("select_region.html", sido_list=sido_list)
 
 
+@app.route('/air_quality')
+def air_quality():
+    sido = request.args.get("sido")
+
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    # 최신 측정 1개 가져오기
+    cur.execute("""
+        SELECT station, pm10, pm25, o3, no2, so2, co, khai, dataTime
+        FROM air_quality
+        WHERE sido = ?
+        ORDER BY dataTime DESC
+        LIMIT 1
+    """, (sido,))
+
+    data = cur.fetchone()
+    conn.close()
+
+    return render_template("air_quality.html", sido=sido, data=data)
+
+
+
 if __name__ == '__main__':
-    # 서버 시작 시 자동 업데이트 기능 실행
+    # 서버 시작 시 자동 업데이트 기능 실행 / 뭔가 이거 있을때 마다 홈페이지 로딩이 안되서 주석처리
+    # 실시간 데이터 받아오는건 나중에 해결해봐야될듯 , 무슨 문제가 있는것 같음
     # auto_update()
     app.run(debug=True)
