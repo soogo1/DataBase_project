@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>지역 선택</title>
+</head>
+<body>
+
+    <h1>운동 추천을 위한 지역 선택</h1>
+
+    <form action="/air_quality" method="GET">
+        <label>지역을 선택하세요:</label>
+        <select name="sido">
+            {% for s in sido_list %}
+                <option value="{{ s }}">{{ s }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">대기질 조회</button>
+    </form>
+
+</body>
+</html>

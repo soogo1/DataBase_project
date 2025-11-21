@@ -202,6 +202,15 @@ def recommend():
                            gender=gender,
                            fitness=fitness)
 
+@app.route('/select_region')
+def select_region():
+    # 전국 시도 목록을 HTML로 보내줌
+    sido_list = [
+        "서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산", "세종",
+        "강원", "충남", "충북", "전남", "전북", "경남", "경북", "제주"
+    ]
+    return render_template("select_region.html", sido_list=sido_list)
+
 
 if __name__ == '__main__':
     # 서버 시작 시 자동 업데이트 기능 실행
