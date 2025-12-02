@@ -166,6 +166,9 @@ def recommend_form():
 
 @app.route('/recommend')
 def recommend():
+    # 지역 + 측정소 + 사용자 특성
+    sido = request.args.get("sido")
+    station = request.args.get("station")
     age = request.args.get("age")
     bmi = request.args.get("bmi")
     gender = request.args.get("gender")
@@ -174,33 +177,50 @@ def recommend():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
+    # 1) 선택된 지역 + 측정소의 최신 대기질 1건
     cur.execute("""
-    SELECT category, difficulty, exercise_name
-    FROM exercise_plan
-    WHERE age_group = ?
-      AND bmi_level = ?
-      AND gender = ?
-      AND fitness_level = ?
-    ORDER BY 
-      difficulty ASC,
-      CASE category
-        WHEN '준비운동' THEN 1
-        WHEN '본운동' THEN 2
-        WHEN '마무리운동' THEN 3
-        ELSE 4
-      END
-""", (age, bmi, gender, fitness))
+        SELECT station, pm10, pm25, o3, no2, so2, co, khai, dataTime
+        FROM air_quality
+        WHERE sido = ?
+          AND station = ?
+        ORDER BY dataTime DESC
+        LIMIT 1
+    """, (sido, station))
+    air = cur.fetchone()
 
+    # 2) 운동 추천 
+    cur.execute("""
+        SELECT category, difficulty, exercise_name
+        FROM exercise_plan
+        WHERE age_group = ?
+          AND bmi_level = ?
+          AND gender = ?
+          AND fitness_level = ?
+        ORDER BY 
+          difficulty ASC,
+          CASE category
+            WHEN '준비운동' THEN 1
+            WHEN '본운동' THEN 2
+            WHEN '마무리운동' THEN 3
+            ELSE 4
+          END
+    """, (age, bmi, gender, fitness))
 
     rows = cur.fetchall()
     conn.close()
 
-    return render_template("recommend.html",
-                           rows=rows,
-                           age=age,
-                           bmi=bmi,
-                           gender=gender,
-                           fitness=fitness)
+    return render_template(
+        "recommend.html",
+        sido=sido,
+        station=station,
+        air=air,
+        rows=rows,
+        age=age,
+        bmi=bmi,
+        gender=gender,
+        fitness=fitness
+    )
+
 
 @app.route('/select_region')
 def select_region():
@@ -215,23 +235,44 @@ def select_region():
 @app.route('/air_quality')
 def air_quality():
     sido = request.args.get("sido")
+    # 선택된 측정소
+    station = request.args.get("station")
 
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
-    # 최신 측정 1개 가져오기
+    # 1) 해당 시/도의 측정소 목록 가져오기
     cur.execute("""
-        SELECT station, pm10, pm25, o3, no2, so2, co, khai, dataTime
+        SELECT DISTINCT station
         FROM air_quality
         WHERE sido = ?
-        ORDER BY dataTime DESC
-        LIMIT 1
+        ORDER BY station
     """, (sido,))
+    stations = [row[0] for row in cur.fetchall()]
 
-    data = cur.fetchone()
+    # 2) 선택된 측정소가 있으면 그 측정소의 최신 데이터 1건 조회
+    data = None
+    if station:
+        cur.execute("""
+            SELECT station, pm10, pm25, o3, no2, so2, co, khai, dataTime
+            FROM air_quality
+            WHERE sido = ?
+              AND station = ?
+            ORDER BY dataTime DESC
+            LIMIT 1
+        """, (sido, station))
+        data = cur.fetchone()
+
     conn.close()
 
-    return render_template("air_quality.html", sido=sido, data=data)
+    return render_template(
+        "air_quality.html",
+        sido=sido,
+        stations=stations,
+        selected_station=station,
+        data=data
+    )
+
 
 
 

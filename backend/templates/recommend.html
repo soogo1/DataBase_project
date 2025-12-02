@@ -2,25 +2,54 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>운동 추천 결과</title>
+    <title>운동 추천 종합 결과</title>
+
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        h2 { margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background: #f0f0f0; }
+    </style>
 </head>
+
 <body>
 
-    <h1>운동 추천 결과</h1>
+    <h1>{{ sido }} 지역 기반 운동 추천 종합 결과</h1>
 
-    <p>{{ age }} / {{ bmi }} / {{ gender }} / {{ fitness }}</p>
+    <h2>1. 최신 대기질 정보</h2>
 
-    <table border="1" cellpadding="6">
+    {% if air %}
+        <table>
+            <tr><th>측정소</th><td>{{ air[0] }}</td></tr>
+            <tr><th>PM10</th><td>{{ air[1] }}</td></tr>
+            <tr><th>PM25</th><td>{{ air[2] }}</td></tr>
+            <tr><th>O₃</th><td>{{ air[3] }}</td></tr>
+            <tr><th>NO₂</th><td>{{ air[4] }}</td></tr>
+            <tr><th>SO₂</th><td>{{ air[5] }}</td></tr>
+            <tr><th>CO</th><td>{{ air[6] }}</td></tr>
+            <tr><th>KHAI</th><td>{{ air[7] }}</td></tr>
+            <tr><th>측정시간</th><td>{{ air[8] }}</td></tr>
+        </table>
+    {% else %}
+        <p>대기질 데이터가 없습니다.</p>
+    {% endif %}
+
+    <h2>2. 맞춤 운동 추천</h2>
+
+    <p>연령대: {{ age }} / BMI: {{ bmi }} / 성별: {{ gender }} / 체력등급: {{ fitness }}</p>
+
+    <table>
         <tr>
-            <th>카테고리</th>
             <th>난이도</th>
-            <th>추천운동명</th>
+            <th>카테고리</th>
+            <th>운동명</th>
         </tr>
 
-        {% for c, d, name in rows %}
+        {% for cat, diff, name in exercises %}
         <tr>
-            <td>{{ c }}</td>
-            <td>{{ d }}</td>
+            <td>{{ diff }}</td>
+            <td>{{ cat }}</td>
             <td>{{ name }}</td>
         </tr>
         {% endfor %}

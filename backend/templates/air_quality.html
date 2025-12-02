@@ -8,8 +8,26 @@
 
     <h1>{{ sido }} 대기질 정보</h1>
 
+    <!-- 시·도 안에서 측정소 선택 -->
+    <form action="/air_quality" method="GET">
+        <input type="hidden" name="sido" value="{{ sido }}">
+
+        <label>측정소 선택:</label>
+        <select name="station">
+            {% for st in stations %}
+                <option value="{{ st }}" {% if st == selected_station %}selected{% endif %}>
+                    {{ st }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit">대기질 조회</button>
+    </form>
+
+    <hr>
+
     {% if data %}
-        <p>측정소: {{ data[0] }}</p>
+        <h2>선택한 측정소: {{ data[0] }}</h2>
         <p>PM10: {{ data[1] }}</p>
         <p>PM25: {{ data[2] }}</p>
         <p>O₃: {{ data[3] }}</p>
@@ -18,53 +36,56 @@
         <p>CO: {{ data[6] }}</p>
         <p>통합대기지수(KHAI): {{ data[7] }}</p>
         <p>측정시간: {{ data[8] }}</p>
+
+        <hr>
+
+        <h2>운동 추천 조건 입력</h2>
+
+        <form action="/recommend" method="GET">
+            <!-- 지역/측정소 정보를 그대로 넘김 -->
+            <input type="hidden" name="sido" value="{{ sido }}">
+            <input type="hidden" name="station" value="{{ data[0] }}">
+
+            <label>연령대:</label>
+            <select name="age">
+                <option>10대</option>
+                <option>20대</option>
+                <option>30대</option>
+                <option>40대</option>
+                <option>50대</option>
+            </select>
+            <br><br>
+
+            <label>BMI 단계:</label>
+            <select name="bmi">
+                <option>정상</option>
+                <option>과체중</option>
+                <option>1단계비만</option>
+                <option>2단계비만</option>
+            </select>
+            <br><br>
+
+            <label>성별:</label>
+            <select name="gender">
+                <option>F</option>
+                <option>M</option>
+            </select>
+            <br><br>
+
+            <label>체력등급:</label>
+            <select name="fitness">
+                <option>1등급</option>
+                <option>2등급</option>
+                <option>3등급</option>
+            </select>
+            <br><br>
+
+            <button type="submit">운동 추천 받기</button>
+        </form>
+
     {% else %}
-        <p>데이터가 없습니다.</p>
+        <p>측정소를 선택한 뒤 "대기질 조회" 버튼을 눌러주세요.</p>
     {% endif %}
-
-    <hr>
-
-    <h2>운동 추천 조건 입력</h2>
-
-    <form action="/recommend" method="GET">
-        <input type="hidden" name="sido" value="{{ sido }}">
-
-        <label>연령대:</label>
-        <select name="age">
-            <option>10대</option>
-            <option>20대</option>
-            <option>30대</option>
-            <option>40대</option>
-            <option>50대</option>
-        </select>
-        <br><br>
-
-        <label>BMI 단계:</label>
-        <select name="bmi">
-            <option>정상</option>
-            <option>과체중</option>
-            <option>1단계비만</option>
-            <option>2단계비만</option>
-        </select>
-        <br><br>
-
-        <label>성별:</label>
-        <select name="gender">
-            <option>F</option>
-            <option>M</option>
-        </select>
-        <br><br>
-
-        <label>체력등급:</label>
-        <select name="fitness">
-            <option>1등급</option>
-            <option>2등급</option>
-            <option>3등급</option>
-        </select>
-        <br><br>
-
-        <button type="submit">운동 추천 받기</button>
-    </form>
 
 </body>
 </html>
