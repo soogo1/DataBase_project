@@ -188,25 +188,51 @@ def recommend():
     """, (sido, station))
     air = cur.fetchone()
 
-    # 2) 운동 추천 
+    # 2) 운동 추천 (1차: 모든 조건 정확히 일치)
+    #    템플릿에서 (cat, diff, name) 으로 받으니까
+    #    SELECT 순서를 category, difficulty, exercise_name 으로 맞춤
     cur.execute("""
-        SELECT category, difficulty, exercise_name
+        SELECT 
+            category,          -- 카테고리(준비/본/마무리)
+            difficulty,        -- 난이도
+            exercise_name      -- 운동명
         FROM exercise_plan
-        WHERE age_group = ?
-          AND bmi_level = ?
-          AND gender = ?
-          AND fitness_level = ?
-        ORDER BY 
+        WHERE TRIM(age_group)     = TRIM(?)
+          AND TRIM(bmi_level)     = TRIM(?)
+          AND TRIM(gender)        = TRIM(?)
+          AND TRIM(fitness_level) = TRIM(?)
+        ORDER BY
           difficulty ASC,
-          CASE category
-            WHEN '준비운동' THEN 1
-            WHEN '본운동' THEN 2
+          CASE TRIM(category)
+            WHEN '준비운동'   THEN 1
+            WHEN '본운동'     THEN 2
             WHEN '마무리운동' THEN 3
             ELSE 4
           END
     """, (age, bmi, gender, fitness))
-
     rows = cur.fetchall()
+
+    if not rows:
+        cur.execute("""
+            SELECT 
+                category,
+                difficulty,
+                exercise_name
+            FROM exercise_plan
+            WHERE TRIM(age_group) = TRIM(?)
+              AND TRIM(bmi_level) = TRIM(?)
+              AND TRIM(gender)    = TRIM(?)
+            ORDER BY
+              difficulty ASC,
+              CASE TRIM(category)
+                WHEN '준비운동'   THEN 1
+                WHEN '본운동'     THEN 2
+                WHEN '마무리운동' THEN 3
+                ELSE 4
+              END
+        """, (age, bmi, gender))
+        rows = cur.fetchall()
+
     conn.close()
 
     return render_template(
@@ -214,12 +240,13 @@ def recommend():
         sido=sido,
         station=station,
         air=air,
-        rows=rows,
+        exercises=rows,   # 템플릿 변수 이름을 exercises로 맞춤 / 이게 문제였음
         age=age,
         bmi=bmi,
         gender=gender,
         fitness=fitness
     )
+
 
 
 @app.route('/select_region')
