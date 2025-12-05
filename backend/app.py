@@ -160,6 +160,44 @@ def list_data():
         has_next=has_next
     )
 
+def decide_place(air):
+    """대기질 정보를 보고 실내/실외 운동 권장 문구를 만든다."""
+    if not air:
+        return ("정보 부족", "대기질 데이터를 찾을 수 없어, 안전하게 실내 운동을 권장합니다.")
+
+    # air = (station, pm10, pm25, o3, no2, so2, co, khai, dataTime)
+    pm10 = air[1]
+    pm25 = air[2]
+    khai = air[7]
+
+    # 우선순위: 통합대기지수(KHAI) > PM2.5 > PM10
+    score = None
+    if khai is not None:
+        score = khai
+    elif pm25 is not None:
+        score = pm25
+    elif pm10 is not None:
+        score = pm10
+
+    if score is None:
+        return ("정보 부족", "측정값이 부족해 실내/외를 판단하기 어려우므로, 실내 운동을 권장합니다.")
+
+    # KHAI 기준: 0~50 좋음, 51~100 보통, 101~250 나쁨, 251이상 매우나쁨
+    # 내가 임의로 설정 계산한 측정 기준 
+    if score <= 50:
+        return ("실외 운동 최적",
+                "대기질이 매우 좋아서 실외 러닝, 자전거 등 야외 운동을 적극 추천합니다.")
+    elif score <= 100:
+        return ("실외 운동 가능",
+                "야외 운동이 가능하지만, 장시간 활동 시에는 마스크 착용을 권장합니다.")
+    elif score <= 150:
+        return ("실내 운동 권장",
+                "대기질이 다소 나빠 실외 장시간 운동은 피하고, 실내 스트레칭·맨몸운동을 추천합니다.")
+    else:
+        return ("실내 운동만 권장",
+                "대기질이 매우 나빠 야외 운동은 피하고, 실내에서 가벼운 운동만 하는 것을 권장합니다.")
+
+
 @app.route('/recommend_form')
 def recommend_form():
     return render_template("recommend_form.html")
@@ -187,6 +225,9 @@ def recommend():
         LIMIT 1
     """, (sido, station))
     air = cur.fetchone()
+
+    place_title, place_comment = decide_place(air)
+
 
     # 2) 운동 추천 (1차: 모든 조건 정확히 일치)
     #    템플릿에서 (cat, diff, name) 으로 받으니까
@@ -244,9 +285,10 @@ def recommend():
         age=age,
         bmi=bmi,
         gender=gender,
-        fitness=fitness
+        fitness=fitness,
+        place_title=place_title,
+        place_comment = place_comment
     )
-
 
 
 @app.route('/select_region')
@@ -300,11 +342,8 @@ def air_quality():
         data=data
     )
 
-
-
-
 if __name__ == '__main__':
     # 서버 시작 시 자동 업데이트 기능 실행 / 뭔가 이거 있을때 마다 홈페이지 로딩이 안되서 주석처리
     # 실시간 데이터 받아오는건 나중에 해결해봐야될듯 , 무슨 문제가 있는것 같음
-    # auto_update()
+    auto_update()
     app.run(debug=True)
