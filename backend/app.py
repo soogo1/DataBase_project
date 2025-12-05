@@ -43,10 +43,32 @@ def save_sido_data(sido):
         "&ver=1.3"
     )
 
-    response = requests.get(url)
-    data = response.json()
-    items = data['response']['body']['items']
+    # 1) API 호출
+    try:
+        response = requests.get(url, timeout=5)
+    except Exception as e:
+        print(f"[{sido}] API 요청 실패:", e)
+        return 0
 
+    # 2) HTTP 상태 코드 확인
+    if response.status_code != 200:
+        print(f"[{sido}] API 응답 코드 이상:", response.status_code)
+        return 0
+
+    # 3) JSON 파싱 예외 처리
+    try:
+        data = response.json()
+    except ValueError:
+        print(f"[{sido}] JSON 파싱 실패, 처음 200글자:", response.text[:200])
+        return 0
+
+    # 실제 측정 데이터 없으면 종료
+    if "response" not in data or "body" not in data["response"]:
+        print(f"[{sido}] 응답 구조 이상:", data)
+        return 0
+
+    items = data["response"]["body"]["items"]
+    # ---- 여기서부터는 기존 코드 그대로 ----
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
@@ -57,31 +79,22 @@ def save_sido_data(sido):
 
         pm10 = clean_value(item.get('pm10Value'))
 
-        # PM25 정보는 데이터에 없는것 같음
-        # 한국 공공 데이터에는 자주 비어있다고 함
-        # 근데 24시간 평균은 제공하길래 만들어봄
         pm25_raw = item.get('pm25Value')
-
-        # 실시간 값이 없으면 24시간 평균 탐색
         if pm25_raw in [None, "-", ""]:
             pm25_raw = item.get('pm25Value24')
-
-        # 그래도 없으면 24시간 평균 다른 이름 필드 탐색
         if pm25_raw in [None, "-", ""]:
             pm25_raw = item.get('pm25Value24h')
 
         pm25 = clean_value(pm25_raw)
 
-        # ★ 추가 오염물질 저장 (환경부 API에 포함됨)
         o3 = clean_value(item.get("o3Value"))
         no2 = clean_value(item.get("no2Value"))
         so2 = clean_value(item.get("so2Value"))
         co = clean_value(item.get("coValue"))
-        khai = clean_value(item.get("khaiValue"))  # 통합대기지수
+        khai = clean_value(item.get("khaiValue"))
 
-        # DB 삽입
         cur.execute("""
-            INSERT INTO air_quality 
+            INSERT INTO air_quality
             (station, sido, dataTime, pm10, pm25, o3, no2, so2, co, khai)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (station, sido_name, time, pm10, pm25, o3, no2, so2, co, khai))
@@ -109,20 +122,21 @@ def save_all():
 
 def auto_update():
     """서버가 1시간마다 전국 데이터를 자동으로 업데이트하도록 설정."""
-    print("[자동 업데이트] 전국 미세먼지 데이터 저장 시작")
+    print("[자동 업데이트] 전국 미세먼지 데이터 저장 시작 (v2)")
 
     try:
-        # 내부에서 save_all 실행 
-        requests.get("http://127.0.0.1:5000/save_all")
-        print("[자동 업데이트] 완료")
+        total_saved = 0
+        for sido in ALL_SIDO:
+            total_saved += save_sido_data(sido)
+
+        print(f"[자동 업데이트] 완료: 총 {total_saved}개 저장")
     except Exception as e:
         print("[자동 업데이트 오류]", e)
 
+    # 3600초(1시간) 마다 반복
     t = Timer(3600, auto_update)
     t.daemon = True
     t.start()
-
-
 
 # 저장된 내용을 조회하는 기능을 구현하라 (과제 조건있었음)
 # 전체 데이터 조회하는게 양이 너무 많아서 너무 느림, 그래서 쪼개버림
@@ -343,7 +357,7 @@ def air_quality():
     )
 
 if __name__ == '__main__':
-    # 서버 시작 시 자동 업데이트 기능 실행 / 뭔가 이거 있을때 마다 홈페이지 로딩이 안되서 주석처리
-    # 실시간 데이터 받아오는건 나중에 해결해봐야될듯 , 무슨 문제가 있는것 같음
+    # 서버 시작 시 최초 1회만 자동 업데이트 실행
     auto_update()
-    app.run(debug=True)
+    # reloader 끄기 (두 번 실행 방지)
+    app.run(debug=True, use_reloader=False)
