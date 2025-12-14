@@ -40,3 +40,7 @@ pip install flask requests
 
 # 서버 실행
 python app.py
+
+브라우저에서 다음 주소로 접속합니다.
+지역 선택: http://127.0.0.1:5000/select_region
+전체 대기질 조회(테스트용): http://127.0.0.1:5000/list
