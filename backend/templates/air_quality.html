@@ -1,91 +1,96 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ sido }} 대기질 정보</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>{{ sido }} 대기질 정보</h1>
+{% block title %}{{ sido }} 대기질 상세{% endblock %}
 
-    <!-- 시·도 안에서 측정소 선택 -->
-    <form action="/air_quality" method="GET">
-        <input type="hidden" name="sido" value="{{ sido }}">
+{% block content %}
+<div class="layout-grid">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">2단계: 측정소 선택 및 대기질 확인</div>
+                <div class="text-muted">
+                    선택한 시·도: <b>{{ sido }}</b>
+                </div>
+            </div>
+            <div class="card-badge">Step 2 / 3</div>
+        </div>
 
-        <label>측정소 선택:</label>
-        <select name="station">
-            {% for st in stations %}
-                <option value="{{ st }}" {% if st == selected_station %}selected{% endif %}>
-                    {{ st }}
-                </option>
-            {% endfor %}
-        </select>
-
-        <button type="submit">대기질 조회</button>
-    </form>
-
-    <hr>
-
-    {% if data %}
-        <h2>선택한 측정소: {{ data[0] }}</h2>
-        <p>PM10: {{ data[1] }}</p>
-        <p>PM25: {{ data[2] }}</p>
-        <p>O₃: {{ data[3] }}</p>
-        <p>NO₂: {{ data[4] }}</p>
-        <p>SO₂: {{ data[5] }}</p>
-        <p>CO: {{ data[6] }}</p>
-        <p>통합대기지수(KHAI): {{ data[7] }}</p>
-        <p>측정시간: {{ data[8] }}</p>
-
-        <hr>
-
-        <h2>운동 추천 조건 입력</h2>
-
-        <form action="/recommend" method="GET">
-            <!-- 지역/측정소 정보를 그대로 넘김 -->
+        <form method="GET" action="/air_quality" class="mt-12">
             <input type="hidden" name="sido" value="{{ sido }}">
-            <input type="hidden" name="station" value="{{ data[0] }}">
+            <div class="form-grid">
+                <div>
+                    <label for="station">측정소 선택</label>
+                    <select id="station" name="station" required>
+                        <option value="" disabled {% if not selected_station %}selected{% endif %}>
+                            측정소를 선택하세요
+                        </option>
+                        {% for st in stations %}
+                            <option value="{{ st }}" {% if st == selected_station %}selected{% endif %}>
+                                {{ st }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
 
-            <label>연령대:</label>
-            <select name="age">
-                <option>10대</option>
-                <option>20대</option>
-                <option>30대</option>
-                <option>40대</option>
-                <option>50대</option>
-            </select>
-            <br><br>
-
-            <label>BMI 단계:</label>
-            <select name="bmi">
-                <option>정상</option>
-                <option>과체중</option>
-                <option>1단계비만</option>
-                <option>2단계비만</option>
-            </select>
-            <br><br>
-
-            <label>성별:</label>
-            <select name="gender">
-                <option>F</option>
-                <option>M</option>
-            </select>
-            <br><br>
-
-            <label>체력등급:</label>
-            <select name="fitness">
-                <option>1등급</option>
-                <option>2등급</option>
-                <option>3등급</option>
-            </select>
-            <br><br>
-
-            <button type="submit">운동 추천 받기</button>
+            <div class="mt-16 flex gap-8">
+                <button type="submit" class="btn btn-primary">이 측정소 대기질 조회</button>
+                <a href="/select_region" class="btn btn-outline btn-sm">시·도 다시 선택</a>
+            </div>
         </form>
 
-    {% else %}
-        <p>측정소를 선택한 뒤 "대기질 조회" 버튼을 눌러주세요.</p>
-    {% endif %}
+        {% if data %}
+            <hr style="margin: 18px 0; border: none; border-top: 1px solid var(--border-soft);">
 
-</body>
-</html>
+            <div class="flex-between mb-8">
+                <div style="font-size: 14px; font-weight: 600;">
+                    선택된 측정소: {{ data[0] }}
+                </div>
+                <span class="tag-soft">측정시간: {{ data[8] }}</span>
+            </div>
+
+            <table>
+                <tr>
+                    <th>항목</th>
+                    <th>수치</th>
+                </tr>
+                <tr><td>PM10</td><td>{{ data[1] }}</td></tr>
+                <tr><td>PM25</td><td>{{ data[2] }}</td></tr>
+                <tr><td>O₃</td><td>{{ data[3] }}</td></tr>
+                <tr><td>NO₂</td><td>{{ data[4] }}</td></tr>
+                <tr><td>SO₂</td><td>{{ data[5] }}</td></tr>
+                <tr><td>CO</td><td>{{ data[6] }}</td></tr>
+                <tr><td>KHAI (통합대기지수)</td><td>{{ data[7] }}</td></tr>
+            </table>
+        {% else %}
+            <div class="mt-16 text-muted">
+                아직 선택된 측정소가 없거나, 해당 측정소의 데이터가 없습니다.<br>
+                위 드롭다운에서 측정소를 선택한 뒤 다시 조회해 주세요.
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">다음 단계: 운동 추천 받기</div>
+        </div>
+
+        <div class="text-muted" style="font-size: 13px; line-height: 1.6;">
+            3단계에서는 사용자의 연령, BMI 단계, 성별, 체력 등급을 입력받아<br>
+            현재 대기질을 고려한 맞춤 운동 루틴을 추천합니다.
+        </div>
+
+        <form action="/recommend_form" method="GET" class="mt-16">
+            <input type="hidden" name="sido" value="{{ sido }}">
+            <input type="hidden" name="station" value="{{ selected_station }}">
+            <button type="submit" class="btn btn-primary">
+                이 지역·측정소 기준으로 운동 추천 받기
+            </button>
+        </form>
+
+        <div class="mt-16 text-muted" style="font-size: 12px;">
+            ※ 측정소를 바꾸고 싶다면 먼저 왼쪽에서 다른 측정소를 다시 선택해 주세요.
+        </div>
+    </div>
+</div>
+{% endblock %}

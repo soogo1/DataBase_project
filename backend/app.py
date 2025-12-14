@@ -68,7 +68,6 @@ def save_sido_data(sido):
         return 0
 
     items = data["response"]["body"]["items"]
-    # ---- 여기서부터는 기존 코드 그대로 ----
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
@@ -92,6 +91,7 @@ def save_sido_data(sido):
         so2 = clean_value(item.get("so2Value"))
         co = clean_value(item.get("coValue"))
         khai = clean_value(item.get("khaiValue"))
+
 
         cur.execute("""
             INSERT INTO air_quality

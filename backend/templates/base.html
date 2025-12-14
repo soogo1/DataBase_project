@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}대기질 기반 운동 추천 서비스{% endblock %}</title>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --accent: #22c55e;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-sub: #6b7280;
+            --border-soft: #e5e7eb;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        header {
+            background: linear-gradient(120deg, #1d4ed8, #22c55e);
+            color: #fff;
+            padding: 16px 32px;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-inner {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .brand-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brand-text span:first-child {
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .brand-text span:last-child {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        nav {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+        }
+
+        .nav-link {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #e5e7eb;
+        }
+
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .nav-link--primary {
+            background: #fff;
+            color: #1d4ed8;
+            font-weight: 600;
+        }
+
+        main {
+            max-width: 1100px;
+            margin: 24px auto 40px;
+            padding: 0 16px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 20px;
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+            gap: 18px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            border: 1px solid var(--border-soft);
+            box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+            padding: 18px 18px 16px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .card-badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            border: 1px solid var(--border-soft);
+            color: var(--text-sub);
+            background: #f9fafb;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 3px 10px;
+            font-size: 11px;
+            border: 1px solid var(--border-soft);
+            color: var(--text-sub);
+        }
+
+        .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--accent);
+        }
+
+        .pill-danger .pill-dot {
+            background: var(--danger);
+        }
+
+        .pill-danger {
+            border-color: rgba(248, 113, 113, 0.5);
+            color: #b91c1c;
+            background: #fef2f2;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px 18px;
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 500;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        select, input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 7px 9px;
+            border-radius: 9px;
+            border: 1px solid var(--border-soft);
+            font-size: 13px;
+            outline: none;
+            background: #f9fafb;
+        }
+
+        select:focus, input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+            background: #ffffff;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 8px 16px;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-outline {
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            border: 1px solid var(--border-soft);
+            padding: 7px 8px;
+            text-align: center;
+        }
+
+        th {
+            background: #f9fafb;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) td {
+            background: #fdfdfd;
+        }
+
+        .pagination {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pagination a {
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--border-soft);
+            background: #fff;
+            color: var(--text-main);
+        }
+
+        .pagination a:hover {
+            background: #f3f4f6;
+        }
+
+        .pagination span {
+            color: var(--text-sub);
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            background: #e5f0ff;
+            color: #1d4ed8;
+        }
+
+        .tag-soft {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .mt-8 { margin-top: 8px; }
+        .mt-12 { margin-top: 12px; }
+        .mt-16 { margin-top: 16px; }
+        .mt-20 { margin-top: 20px; }
+        .mb-8 { margin-bottom: 8px; }
+        .mb-12 { margin-bottom: 12px; }
+
+        .text-muted { color: var(--text-sub); font-size: 12px; }
+
+        .flex {
+            display: flex;
+            align-items: center;
+        }
+
+        .flex-between {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .gap-8 { gap: 8px; }
+
+        footer {
+            max-width: 1100px;
+            margin: 0 auto 20px;
+            padding: 0 16px;
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        @media (max-width: 768px) {
+            .layout-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+            header {
+                padding: 12px 16px;
+            }
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            nav {
+                width: 100%;
+                justify-content: flex-start;
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <div class="header-inner">
+        <div class="brand">
+            <div class="brand-logo">INU</div>
+            <div class="brand-text">
+                <span>대기질 기반 운동 추천</span>
+                <span>실시간 대기질 + 맞춤 운동 플랜</span>
+            </div>
+        </div>
+
+        <nav>
+            <a href="/select_region" class="nav-link nav-link--primary">지역별 대기질</a>
+            <a href="/recommend_form" class="nav-link">운동 추천 검색</a>
+            <a href="/list" class="nav-link">DB 전체 조회</a>
+        </nav>
+    </div>
+</header>
+
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<footer>
+    <span>※ 공공데이터포털 대기질 Open API + 운동 계획 CSV 데이터를 활용한 학기 과제용 서비스입니다.</span>
+</footer>
+
+</body>
+</html>

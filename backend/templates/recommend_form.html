@@ -1,56 +1,92 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>운동 추천 검색</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-    <h1>운동 추천 검색</h1>
+{% block title %}운동 추천 검색 – 사용자 정보 입력{% endblock %}
 
-    <form action="/recommend" method="GET">
+{% block content %}
+<div class="layout-grid">
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <div class="card-title">3단계: 사용자 특성 입력</div>
+                <div class="text-muted">
+                    최근 선택한 시·도 / 측정소 기준으로 운동 루틴을 맞춤 추천합니다.
+                </div>
+            </div>
+            <div class="card-badge">Step 3 / 3</div>
+        </div>
 
-        <label>연령대:</label>
-        <select name="age">
-            <option>10대</option>
-            <option>20대</option>
-            <option>30대</option>
-            <option>40대</option>
-            <option>50대</option>
-            <option>60대</option>
-            <option>70대 이상</option>
-        </select>
-        <br><br>
+        <form action="/recommend" method="GET" class="mt-12">
+            {# 앞 단계에서 넘어온 sido, station이 있으면 같이 넘긴다 #}
+            <input type="hidden" name="sido" value="{{ request.args.get('sido') }}">
+            <input type="hidden" name="station" value="{{ request.args.get('station') }}">
 
-        <label>BMI 단계:</label>
-        <select name="bmi">
-            <option>저체중</option>
-            <option>정상</option>
-            <option>비만전단계비만</option>
-            <option>1단계비만</option>
-            <option>2단계비만</option>
-            <option>3단계비만</option>
-        </select>
-        <br><br>
+            <div class="form-grid">
+                <div>
+                    <label>연령대</label>
+                    <select name="age" required>
+                        <option>10대</option>
+                        <option>20대</option>
+                        <option>30대</option>
+                        <option>40대</option>
+                        <option>50대</option>
+                        <option>60대</option>
+                        <option>70대 이상</option>
+                    </select>
+                </div>
 
-        <label>성별:</label>
-        <select name="gender">
-            <option>F</option>
-            <option>M</option>
-        </select>
-        <br><br>
+                <div>
+                    <label>BMI 단계</label>
+                    <select name="bmi" required>
+                        <option>저체중</option>
+                        <option>정상</option>
+                        <option>비만전단계비만</option>
+                        <option>1단계비만</option>
+                        <option>2단계비만</option>
+                        <option>3단계비만</option>
+                    </select>
+                </div>
 
-        <label>체력등급:</label>
-        <select name="fitness">
-            <option>1등급</option>
-            <option>2등급</option>
-            <option>3등급</option>
-            <option>참가증</option>
-        </select>
-        <br><br>
+                <div>
+                    <label>성별</label>
+                    <select name="gender" required>
+                        <option>F</option>
+                        <option>M</option>
+                    </select>
+                </div>
 
-        <button type="submit">운동 추천 받기</button>
-    </form>
+                <div>
+                    <label>체력등급</label>
+                    <select name="fitness" required>
+                        <option>1등급</option>
+                        <option>2등급</option>
+                        <option>3등급</option>
+                        <option>참가증</option>
+                    </select>
+                </div>
+            </div>
 
-</body>
-</html>
+            <div class="mt-16 flex gap-8">
+                <button type="submit" class="btn btn-primary">
+                    대기질 + 사용자 정보 기반 운동 추천 받기
+                </button>
+                <a href="/select_region" class="btn btn-outline btn-sm">처음부터 다시 선택</a>
+            </div>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">입력값 안내</div>
+        </div>
+        <ul style="font-size: 13px; color: var(--text-sub); padding-left: 18px; line-height: 1.6;">
+            <li><b>연령대</b>와 <b>BMI 단계</b>에 따라 추천 운동 강도가 달라집니다.</li>
+            <li><b>성별</b>은 CSV 데이터의 분류 기준에 맞춰 사용됩니다.</li>
+            <li><b>체력등급</b>이 낮을수록 난이도가 낮은 운동이 먼저 추천됩니다.</li>
+        </ul>
+        <div class="mt-16 text-muted" style="font-size: 12px;">
+            ※ 운동 계획 데이터는 CSV(운동 프로그램 표준 데이터)를 기반으로 DB에 저장하였으며,<br>
+            준비운동 → 본운동 → 마무리운동 순서가 유지되도록 정렬됩니다.
+        </div>
+    </div>
+</div>
+{% endblock %}

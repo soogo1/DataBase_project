@@ -1,66 +1,124 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>운동 추천 종합 결과</title>
+{% extends "base.html" %}
 
-    <style>
-        body { font-family: Arial; padding: 20px; }
-        h2 { margin-top: 30px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background: #f0f0f0; }
-    </style>
-</head>
+{% block title %}운동 추천 결과{% endblock %}
 
-<body>
-
-    <h1>{{ sido }} 지역 기반 운동 추천 종합 결과</h1>
-
-    <h2>1. 실내/실외 운동 권장</h2>
-
-    <h3>{{ place_title }}</h3>
-    <p>{{ place_comment }}</p>
-
-    <h2>2. 최신 대기질 정보</h2>
-
-    {% if air %}
-        <table>
-            <tr><th>측정소</th><td>{{ air[0] }}</td></tr>
-            <tr><th>PM10</th><td>{{ air[1] }}</td></tr>
-            <tr><th>PM25</th><td>{{ air[2] }}</td></tr>
-            <tr><th>O₃</th><td>{{ air[3] }}</td></tr>
-            <tr><th>NO₂</th><td>{{ air[4] }}</td></tr>
-            <tr><th>SO₂</th><td>{{ air[5] }}</td></tr>
-            <tr><th>CO</th><td>{{ air[6] }}</td></tr>
-            <tr><th>KHAI</th><td>{{ air[7] }}</td></tr>
-            <tr><th>측정시간</th><td>{{ air[8] }}</td></tr>
-        </table>
-    {% else %}
-        <p>대기질 데이터가 없습니다.</p>
+{% block content %}
+<div class="page-title">운동 추천 종합 결과</div>
+<div class="page-subtitle">
+    선택 지역: <b>{{ sido or '미선택' }}</b>
+    {% if station %}
+        / 측정소: <b>{{ station }}</b>
     {% endif %}
+</div>
 
+<div class="layout-grid">
+    <!-- 왼쪽: 대기질 + 실내/실외 추천 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">1. 최신 대기질 정보</div>
+            <div class="pill">
+                <div class="pill-dot"></div>
+                <span>공공데이터포털 실시간 관측값</span>
+            </div>
+        </div>
 
-    <h2>3. 맞춤 운동 추천</h2>
+        {% if air %}
+            <div class="flex-between mb-8">
+                <span style="font-size: 14px; font-weight: 600;">
+                    측정소: {{ air[0] }}
+                </span>
+                <span class="tag-soft">측정시간: {{ air[8] }}</span>
+            </div>
 
-    <p>연령대: {{ age }} / BMI: {{ bmi }} / 성별: {{ gender }} / 체력등급: {{ fitness }}</p>
+            <table>
+                <tr><th>항목</th><th>수치</th></tr>
+                <tr><td>PM10</td><td>{{ air[1] }}</td></tr>
+                <tr><td>PM25</td><td>{{ air[2] }}</td></tr>
+                <tr><td>O₃</td><td>{{ air[3] }}</td></tr>
+                <tr><td>NO₂</td><td>{{ air[4] }}</td></tr>
+                <tr><td>SO₂</td><td>{{ air[5] }}</td></tr>
+                <tr><td>CO</td><td>{{ air[6] }}</td></tr>
+                <tr><td>KHAI (통합대기지수)</td><td>{{ air[7] }}</td></tr>
+            </table>
+        {% else %}
+            <p class="text-muted mt-8">
+                대기질 데이터를 찾을 수 없습니다. (시·도/측정소 선택이 누락되었을 수 있습니다.)
+            </p>
+        {% endif %}
 
-    <table>
-        <tr>
-            <th>난이도</th>
-            <th>카테고리</th>
-            <th>운동명</th>
-        </tr>
+        <hr style="margin: 18px 0; border: none; border-top: 1px solid var(--border-soft);">
 
-        {% for cat, diff, name in exercises %}
-        <tr>
-            <td>{{ diff }}</td>
-            <td>{{ cat }}</td>
-            <td>{{ name }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+        <div class="card-header" style="margin-bottom: 6px;">
+            <div class="card-title" style="font-size: 16px;">2. 실내·실외 운동 추천</div>
+            <span class="card-badge">대기질 지표 기반</span>
+        </div>
 
+        <div class="mt-8">
+            {% if place_title %}
+                <div class="pill {% if '실내 운동' in place_title %}pill-danger{% endif %}">
+                    <div class="pill-dot"></div>
+                    <span>{{ place_title }}</span>
+                </div>
+                <div class="mt-8" style="font-size: 13px; line-height: 1.6;">
+                    {{ place_comment }}
+                </div>
+            {% else %}
+                <div class="text-muted" style="font-size: 13px;">
+                    대기질 정보를 기반으로 한 실내/실외 추천 정보를 생성할 수 없습니다.
+                </div>
+            {% endif %}
+        </div>
 
-</body>
-</html>
+        <div class="mt-16">
+            <a href="/air_quality?sido={{ sido }}&station={{ station }}" class="btn btn-outline btn-sm">
+                ◀ 대기질 다시 선택하러 가기
+            </a>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 운동 루틴 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">3. 맞춤 운동 루틴</div>
+            <div class="card-badge">
+                {{ age }} / {{ bmi }} / {{ gender }} / {{ fitness }}
+            </div>
+        </div>
+
+        {% if exercises and exercises|length > 0 %}
+            <div class="text-muted" style="font-size: 12px; margin-bottom: 8px;">
+                난이도 오름차순 + 준비운동 → 본운동 → 마무리운동 순으로 정렬되어 있습니다.
+            </div>
+
+            <table>
+                <tr>
+                    <th>난이도</th>
+                    <th>카테고리</th>
+                    <th>운동명</th>
+                </tr>
+                {% for cat, diff, name in exercises %}
+                    <tr>
+                        <td>{{ diff }}</td>
+                        <td>{{ cat }}</td>
+                        <td style="text-align:left;">{{ name }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        {% else %}
+            <p class="text-muted">
+                해당 조건에 맞는 운동 계획을 찾지 못했습니다.<br>
+                연령대, BMI 단계, 체력등급을 바꾸어 다시 시도해 주세요.
+            </p>
+        {% endif %}
+
+        <div class="mt-16 flex gap-8">
+            <a href="/recommend_form?sido={{ sido }}&station={{ station }}" class="btn btn-primary btn-sm">
+                다른 조건으로 다시 추천 받기
+            </a>
+            <a href="/select_region" class="btn btn-outline btn-sm">
+                처음부터 다시 선택
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

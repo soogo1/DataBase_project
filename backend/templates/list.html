@@ -1,92 +1,59 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <title>미세먼지 관측 데이터</title>
+{% extends "base.html" %}
 
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            padding: 20px; 
-        }
-        h1 {
-            margin-bottom: 20px; 
-        }
-        table {
-            width: 100%; 
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: center;
-            font-size: 13px;
-        }
-        th {
-            background: #f5f5f5;
-        }
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .pagination a {
-            padding: 6px 12px;
-            margin: 0 4px;
-            border: 1px solid #888;
-            color: #333;
-            text-decoration: none;
-        }
-        .pagination span {
-            margin: 0 10px;
-        }
-    </style>
-</head>
-<body>
+{% block title %}전체 대기질 데이터 조회{% endblock %}
 
-    <h1>미세먼지 환경 정보 조회</h1>
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <div>
+            <div class="card-title">전체 대기질 데이터 조회</div>
+            <div class="text-muted">DB에 저장된 전국 관측소 데이터를 페이지 단위로 확인할 수 있습니다.</div>
+        </div>
+        <div class="pill">
+            <div class="pill-dot"></div>
+            <span>페이지당 100건 표시</span>
+        </div>
+    </div>
 
-    <table>
-        <tr>
-            <th>측정소</th>
-            <th>지역</th>
-            <th>시간</th>
-            <th>PM10</th>
-            <th>PM25</th>
-            <th>O3</th>
-            <th>NO2</th>
-            <th>SO2</th>
-            <th>CO</th>
-            <th>KHAI</th>
-        </tr>
-
-        {% for row in rows %}
-        <tr>
-            <td>{{ row[0] }}</td>
-            <td>{{ row[1] }}</td>
-            <td>{{ row[2] }}</td>
-            <td>{{ row[3] }}</td>
-            <td>{{ row[4] }}</td>
-            <td>{{ row[5] }}</td>
-            <td>{{ row[6] }}</td>
-            <td>{{ row[7] }}</td>
-            <td>{{ row[8] }}</td>
-            <td>{{ row[9] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="mt-8" style="overflow-x:auto; max-height: 520px;">
+        <table>
+            <tr>
+                <th>측정소</th>
+                <th>시·도</th>
+                <th>측정시간</th>
+                <th>PM10</th>
+                <th>PM25</th>
+                <th>O₃</th>
+                <th>NO₂</th>
+                <th>SO₂</th>
+                <th>CO</th>
+                <th>KHAI</th>
+            </tr>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[1] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[5] }}</td>
+                <td>{{ row[6] }}</td>
+                <td>{{ row[7] }}</td>
+                <td>{{ row[8] }}</td>
+                <td>{{ row[9] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 
     <div class="pagination">
         {% if page > 1 %}
             <a href="/list?page={{ page-1 }}">◀ 이전</a>
         {% endif %}
-
         <span>{{ page }} 페이지</span>
-
         {% if has_next %}
             <a href="/list?page={{ page+1 }}">다음 ▶</a>
         {% endif %}
     </div>
-
-</body>
-</html>
+</div>
+{% endblock %}
